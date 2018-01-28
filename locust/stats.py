@@ -27,7 +27,7 @@ response time percentile
 """
 CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW = 10
 
-CURRENT_RESPONSE_TIME_SLIDING_WINDOW = 100
+CURRENT_RESPONSE_TIME_SLIDING_WINDOW = 500
 
 CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_requests"])
 
