@@ -683,27 +683,22 @@ def sort_stats(stats):
 
 def rps_header_csv():
     return ",".join([
-            '"# failures"',
+            '"Time"',
             '"Median response time"',
             '"Average response time"',
-            '"Min response time"',
-            '"Max response time"',
-            '"Average Content Size"',
             '"Requests/s"',
         ]) + '\n'
 
 
 def rps_csv():
     from . import runners
+    from time import time
 
     s = runners.locust_runner.stats.total
-    return '%i,%i,%i,%i,%i,%i,%.2f\n' % (
-        s.num_failures,
+    return '%.2f, %i,%i,%.2f\n' % (
+        time(),
         s.median_response_time,
         s.avg_response_time,
-        s.min_response_time or 0,
-        s.max_response_time,
-        s.avg_content_length,
         s.total_rps,
     )
 
