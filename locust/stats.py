@@ -669,7 +669,7 @@ def write_stat_csvs(base_filepath):
     with open(base_filepath + '_distribution.csv', 'w') as f:
         f.write(distribution_csv())
 
-    with open(base_filepath + '_rps.csv', 'a') as f:
+    with open(base_filepath + '_rps.csv', 'w') as f:
         f.write(rps_csv())
 
 
@@ -679,13 +679,43 @@ def sort_stats(stats):
 
 def rps_csv():
     from . import runners
+    rows = ["Requests/s"]
+    return "\n".join(rows)
 
 
 def requests_csv():
     from . import runners
-    rows = ["Requests/s"]
-    return "\n".join(rows)
 
+    """Returns the contents of the 'requests' tab as CSV."""
+    rows = [
+        ",".join([
+            '"Method"',
+            '"Name"',
+            '"# requests"',
+            '"# failures"',
+            '"Median response time"',
+            '"Average response time"',
+            '"Min response time"',
+            '"Max response time"',
+            '"Average Content Size"',
+            '"Requests/s"',
+        ])
+    ]
+
+    for s in chain(sort_stats(runners.locust_runner.request_stats), [runners.locust_runner.stats.total]):
+        rows.append('"%s","%s",%i,%i,%i,%i,%i,%i,%i,%.2f' % (
+            s.method,
+            s.name,
+            s.num_requests,
+            s.num_failures,
+            s.median_response_time,
+            s.avg_response_time,
+            s.min_response_time or 0,
+            s.max_response_time,
+            s.avg_content_length,
+            s.total_rps,
+        ))
+    return "\n".join(rows)
 
 def distribution_csv():
     """Returns the contents of the 'distribution' tab as CSV."""
