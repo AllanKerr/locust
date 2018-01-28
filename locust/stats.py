@@ -27,6 +27,8 @@ response time percentile
 """
 CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW = 10
 
+CURRENT_RESPONSE_TIME_SLIDING_WINDOW = 50
+
 CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_requests"])
 
 
@@ -179,6 +181,17 @@ class StatsEntry(object):
     This dict is used to calculate the median and percentile response times.
     """
 
+    response_times_window = None
+    """
+    A list of response times for the last CURRENT_RESPONSE_TIME_SLIDING_WINDOW requests.
+    """
+
+    avg_response_time_window = None
+    """
+    The average response time for the the sliding window of the last at most 
+    CURRENT_RESPONSE_TIME_SLIDING_WINDOW responses.
+    """
+
     use_response_times_cache = False
     """
     If set to True, the copy of the response_time dict will be stored in response_times_cache
@@ -215,6 +228,8 @@ class StatsEntry(object):
         self.num_failures = 0
         self.total_response_time = 0
         self.response_times = {}
+        self.response_times_window = []
+        self.avg_response_time_window = 0
         self.min_response_time = None
         self.max_response_time = 0
         self.last_request_timestamp = int(time.time())
@@ -269,6 +284,16 @@ class StatsEntry(object):
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
 
+        # add to the sliding window
+        num = len(self.response_times_window)
+        if num >= CURRENT_RESPONSE_TIME_SLIDING_WINDOW:
+            self.avg_response_time_window = (self.avg_response_time_window*num - self.response_times_window.pop(0) + response_time) / num
+        else:
+            self.avg_response_time_window = (self.avg_response_time_window*num + response_time) / (num + 1)
+
+        self.response_times_window.append(response_time)
+
+
     def log_error(self, error):
         self.num_failures += 1
 
@@ -295,6 +320,10 @@ class StatsEntry(object):
             return 0
 
         return median_from_dict(self.num_requests, self.response_times)
+
+    @property
+    def avg_sliding_window_response_time(self):
+        return self.avg_response_time_window
 
     @property
     def current_rps(self):
@@ -684,8 +713,7 @@ def sort_stats(stats):
 def rps_header_csv():
     return ",".join([
             '"Time"',
-            '"Median response time"',
-            '"Average response time"',
+            '"Average sliding window response time"',
             '"Requests/s"',
         ]) + '\n'
 
@@ -695,10 +723,9 @@ def rps_csv():
     from time import time
 
     s = runners.locust_runner.stats.total
-    return '%.2f, %i,%i,%.2f\n' % (
+    return '%.2f, %i,%.2f\n' % (
         time(),
-        s.median_response_time,
-        s.avg_response_time,
+        s.avg_sliding_window_response_time,
         s.total_rps,
     )
 
@@ -736,6 +763,7 @@ def requests_csv():
             s.total_rps,
         ))
     return "\n".join(rows)
+
 
 def distribution_csv():
     """Returns the contents of the 'distribution' tab as CSV."""
