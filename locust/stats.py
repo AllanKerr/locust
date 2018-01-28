@@ -680,9 +680,16 @@ def sort_stats(stats):
 def rps_csv():
     from . import runners
 
-    print("rps_csv\n")
-    rows = ["Requests/s"]
-    return "\n".join(rows)
+    s = runners.locust_runner.stats.total
+    return '%i,%i,%i,%i,%i,%i,%.2f\n' % (
+        s.num_failures,
+        s.median_response_time,
+        s.avg_response_time,
+        s.min_response_time or 0,
+        s.max_response_time,
+        s.avg_content_length,
+        s.total_rps,
+    )
 
 
 def requests_csv():
