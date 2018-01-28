@@ -741,6 +741,7 @@ def rps_header_csv():
             '"Time"',
             '"Average sliding window response time"',
             '"Requests/s"',
+            '"Failures"'
         ]) + '\n'
 
 
@@ -749,10 +750,11 @@ def rps_csv():
     from time import time
 
     s = runners.locust_runner.stats.total
-    return '%.2f, %i,%.2f\n' % (
+    return '%.2f, %i,%.2f,%i\n' % (
         time(),
         s.avg_sliding_window_response_time,
-        s.total_rps,
+        s.current_rps,
+        s.num_failures,
     )
 
 
