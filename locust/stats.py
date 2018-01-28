@@ -679,6 +679,8 @@ def sort_stats(stats):
 
 def rps_csv():
     from . import runners
+
+    print("rps_csv\n")
     rows = ["Requests/s"]
     return "\n".join(rows)
 
