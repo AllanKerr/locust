@@ -669,7 +669,7 @@ def write_stat_csvs(base_filepath):
     with open(base_filepath + '_distribution.csv', 'w') as f:
         f.write(distribution_csv())
 
-    with open(base_filepath + '_rps.csv', 'w') as f:
+    with open(base_filepath + '_rps.csv', 'a') as f:
         f.write(rps_csv())
 
 
