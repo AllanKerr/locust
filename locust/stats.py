@@ -385,7 +385,7 @@ class StatsEntry(object):
 
             self.avg_response_time_window = new_avg / len(new_window)
             self.response_times_window = new_window
-            
+
         elif j >= 0:
             self.avg_response_time_window = other.avg_response_time_window
             self.response_times_window = other.response_times_window
@@ -404,6 +404,8 @@ class StatsEntry(object):
             "total_content_length": self.total_content_length,
             "response_times": self.response_times,
             "num_reqs_per_sec": self.num_reqs_per_sec,
+            "response_times_window": self.response_times_window,
+            "avg_response_time_window": self.avg_response_time_window,
         }
 
     @classmethod
@@ -420,6 +422,8 @@ class StatsEntry(object):
             "total_content_length",
             "response_times",
             "num_reqs_per_sec",
+            "response_times_window",
+            "avg_response_time_window"
         ]:
             setattr(obj, key, data[key])
         return obj
