@@ -27,7 +27,7 @@ response time percentile
 """
 CURRENT_RESPONSE_TIME_PERCENTILE_WINDOW = 10
 
-CURRENT_RESPONSE_TIME_SLIDING_WINDOW = 50
+CURRENT_RESPONSE_TIME_SLIDING_WINDOW = 100
 
 CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_requests"])
 
@@ -287,11 +287,11 @@ class StatsEntry(object):
         # add to the sliding window
         num = len(self.response_times_window)
         if num >= CURRENT_RESPONSE_TIME_SLIDING_WINDOW:
-            self.avg_response_time_window = (self.avg_response_time_window*num - self.response_times_window.pop(0) + response_time) / num
+            self.avg_response_time_window = (self.avg_response_time_window*num - self.response_times_window.pop(0)[1] + response_time) / num
         else:
             self.avg_response_time_window = (self.avg_response_time_window*num + response_time) / (num + 1)
 
-        self.response_times_window.append(response_time)
+        self.response_times_window.append((time.time(), response_time))
 
 
     def log_error(self, error):
@@ -367,6 +367,28 @@ class StatsEntry(object):
             self.response_times[key] = self.response_times.get(key, 0) + other.response_times[key]
         for key in other.num_reqs_per_sec:
             self.num_reqs_per_sec[key] = self.num_reqs_per_sec.get(key, 0) +  other.num_reqs_per_sec[key]
+
+        new_avg = 0
+        new_window = []
+        i = len(self.response_times_window) - 1
+        j = len(other.response_times_window) - 1
+
+        if j >= 0 and i >= 0:
+            while len(new_window) < CURRENT_RESPONSE_TIME_SLIDING_WINDOW and (i >= 0 or j >= 0):
+                if i < 0 or (j >= 0 and self.response_times_window[i][0] < other.response_times_window[j][0]):
+                    new_window.insert(0, other.response_times_window[j])
+                    j -= 1
+                else:
+                    new_window.insert(0, self.response_times_window[i])
+                    i -= 1
+                new_avg += new_window[0][1]
+
+            self.avg_response_time_window = new_avg / len(new_window)
+            self.response_times_window = new_window
+            
+        elif j >= 0:
+            self.avg_response_time_window = other.avg_response_time_window
+            self.response_times_window = other.response_times_window
 
     def serialize(self):
         return {
