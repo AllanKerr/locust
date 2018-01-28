@@ -656,6 +656,10 @@ def stats_printer():
 
 def stats_writer(base_filepath):
     """Writes the csv files for the locust run."""
+
+    with open(base_filepath + '_rps.csv', 'w') as f:
+        f.write(rps_header_csv())
+
     while True:
         write_stat_csvs(base_filepath)
         gevent.sleep(CSV_STATS_INTERVAL_SEC)
@@ -675,6 +679,18 @@ def write_stat_csvs(base_filepath):
 
 def sort_stats(stats):
     return [stats[key] for key in sorted(six.iterkeys(stats))]
+
+
+def rps_header_csv():
+    return ",".join([
+            '"# failures"',
+            '"Median response time"',
+            '"Average response time"',
+            '"Min response time"',
+            '"Max response time"',
+            '"Average Content Size"',
+            '"Requests/s"',
+        ]) + '\n'
 
 
 def rps_csv():
